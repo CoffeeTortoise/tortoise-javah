@@ -9,6 +9,14 @@ set(BUILD_SHARED_LIBS OFF)
 
 set(SOURCES
     main.cpp
+    src/Function.cpp
+    src/Header.cpp
 )
 
-add_executable(tortoise-javah ${SOURCES})
+set(HEADERS
+    include/Function.hpp
+    include/Header.hpp
+    include/Constants.hpp
+)
+
+add_executable(tortoise-javah ${SOURCES} ${HEADERS})
