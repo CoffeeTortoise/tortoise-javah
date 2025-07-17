@@ -1,0 +1,1 @@
+An analogue of the official javah with some additions. Generates header files for classes using native methods.
