@@ -5,9 +5,14 @@
 
 namespace tortoise_javah {
 
+    static const std::string IGNORE_MARK = "NOT FOR JNI";
+
+    
     class Header {
 
         std::string name;
+
+        std::string fullname;
 
         std::vector<Function*> functions;
 
@@ -27,13 +32,13 @@ namespace tortoise_javah {
 
         void transformFuncName(std::string& funcName);
 
-        int makeHeaderFile(std::string& funPrefix);
+        int makeHeaderFile(std::string& funPrefix, std::string& outDir);
 
         public:
 
         Header(std::string& name);
 
-        int generateJAVAH();
+        int generateJAVAH(std::string& outDir);
 
     };
 

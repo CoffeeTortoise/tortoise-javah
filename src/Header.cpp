@@ -8,10 +8,20 @@
 namespace tortoise_javah {
 
     Header::Header(std::string& name) {
-        this->name = name;
+        for (char c : name) this->fullname.push_back(c);
+        int i = static_cast<int>(name.size()) - 1;
+        for (; name.at(i) == ' '; i--);
+        std::string revName;
+        for (; name.at(i) != '/'; i--) {
+            revName.push_back(name.at(i));
+        }
+        i = static_cast<int>(revName.size()) - 1;
+        for (; i >= 0; i--) {
+            this->name.push_back(revName.at(i));
+        }
     }
 
-    int Header::generateJAVAH() {
+    int Header::generateJAVAH(std::string& outDir) {
         int ind = static_cast<int>(this->name.size()) - 1;
         std::string fileExt;
         for (; this->name.at(ind) != '.'; ind--) {
@@ -20,7 +30,7 @@ namespace tortoise_javah {
         if (fileExt.compare("avaj\0")) {
             return EXIT_ERR_EXT;
         }
-        std::ifstream file(this->name);
+        std::ifstream file(this->fullname);
         if (file.is_open()) {
             char c;
             std::string line;
@@ -31,6 +41,15 @@ namespace tortoise_javah {
                     line.push_back(c);
                 }
                 else {
+                    if (line.find(IGNORE_MARK) != std::string::npos) {
+                        for (Function* func : this->functions) {
+                            if (func) {
+                                delete func;
+                                func = nullptr;
+                            }
+                        }
+                        return EXIT_OK_NOT_FOR_JNI;
+                    }
                     int type = Header::checkLine(line);
                     if (type == PACKAGE_NAME && packName.empty()) {
                         packName = Header::transformPackName(line);
@@ -49,7 +68,7 @@ namespace tortoise_javah {
                 }
             }
             file.close();
-            int r = this->makeHeaderFile(prefix);
+            int r = this->makeHeaderFile(prefix, outDir);
             return r;
         }
         else {
@@ -58,7 +77,7 @@ namespace tortoise_javah {
         }
     }
 
-    int Header::makeHeaderFile(std::string& funPrefix) {
+    int Header::makeHeaderFile(std::string& funPrefix, std::string& outDir) {
         std::string authorInfo = "//Generated with tortoise-javah(author: CoffeeTortoise(e.8ychkov@yandex.ru))";
         std::string macro = this->genHeaderMacro();
         std::string beginFile = authorInfo + "\n\n" + "#ifndef " + macro + "\n#define " + macro;
@@ -66,7 +85,7 @@ namespace tortoise_javah {
         std::string endFile = "#ifdef __cplusplus\n}\n#endif\n\n#endif";
         std::string func = this->genHeaderContent(funPrefix);
         std::string content = beginFile + "\n\n" + func + endFile;
-        std::string fileName = this->genHeaderName();
+        std::string fileName = outDir + "/" + this->genHeaderName();
         for (Function* f : this->functions) {
             if (f) {
                 delete f;
